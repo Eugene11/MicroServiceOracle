@@ -1,0 +1,32 @@
+Index: src/main/java/com/tallink/clientmatching/service/ClientSearchSql.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/tallink/clientmatching/service/ClientSearchSql.java	(revision 67:99cd73bfea9455e0aea9d6df49d46de20d9e0da2)
++++ src/main/java/com/tallink/clientmatching/service/ClientSearchSql.java	(revision 67+:99cd73bfea94+)
+@@ -7,7 +7,7 @@
+     PHONE("classpath:sql/client-matching-phone.sql"),
+     PHONES("classpath:sql/client-matching-phones.sql"),
+     CLUBONE("classpath:sql/client-matching-clubone.sql"),
+-    CLUBONE_AND_FIRST_AND_LAST_NAMES("classpath:sql/client-matching-clubone-and-first-and-last-names.sql"),
++    CLUBONE_AND_NAME("classpath:sql/client-matching-clubone-and-name.sql"),
+     FULLNAME("classpath:sql/client-matching-fullname.sql");
+ 
+     private final String sqlFile;
+Index: src/main/java/com/tallink/clientmatching/service/ClientSearchFactory.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/tallink/clientmatching/service/ClientSearchFactory.java	(revision 67:99cd73bfea9455e0aea9d6df49d46de20d9e0da2)
++++ src/main/java/com/tallink/clientmatching/service/ClientSearchFactory.java	(revision 67+:99cd73bfea94+)
+@@ -50,7 +50,7 @@
+             params.put(ClientSearchParams.CLUB_ONE.getParamValue(), clubOne);
+             params.put(FIRST_NAME, fn);
+             params.put(LAST_NAME, ln);
+-            return new ClientSearch(database, CLUBONE_AND_FIRST_AND_LAST_NAMES.name(), getQuery(CLUBONE_AND_FIRST_AND_LAST_NAMES),
++            return new ClientSearch(database, CLUBONE_AND_NAME.name(), getQuery(CLUBONE_AND_NAME),
+                     varcharParams(params));
+         }
+     }

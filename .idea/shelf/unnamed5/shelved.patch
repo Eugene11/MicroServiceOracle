@@ -1,0 +1,13 @@
+Index: src/main/resources/sql/client-matching-clubone-and-first-and-last-names.sql
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/sql/client-matching-clubone-and-first-and-last-names.sql	(revision 66:312160d9fa07494a844481f340249583531f801c)
++++ src/main/resources/sql/client-matching-clubone-and-first-and-last-names.sql	(revision 66+:312160d9fa07+)
+@@ -3,4 +3,4 @@
+   FROM seaware.CLIENT_PROGRAM cp
+   WHERE TRUNC(sysdate) BETWEEN cp.DATE_FROM AND cp.DATE_TO
+   AND t.client_id    =cp.client_id
+-  AND cp.club_account=:CLUBONE AND UPPER(t.FIRST_NAME) LIKE CONCAT(UPPER(:FIRST_NAME), '%') AND (UPPER(t.LAST_NAME) LIKE CONCAT(UPPER(:LAST_NAME), '%')) )
++  AND cp.club_account=:club_one AND UPPER(t.FIRST_NAME) LIKE CONCAT(UPPER(:first_name), '%') AND (UPPER(t.LAST_NAME) LIKE CONCAT(UPPER(:last_name), '%')) )

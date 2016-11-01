@@ -1,0 +1,32 @@
+Index: src/main/java/com/tallink/clientmatching/service/ClientMatcher.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/tallink/clientmatching/service/ClientMatcher.java	(revision 34:da6885aa084c6b94e35f943609a2161f642994e5)
++++ src/main/java/com/tallink/clientmatching/service/ClientMatcher.java	(revision 34+:da6885aa084c+)
+@@ -27,6 +27,9 @@
+ 
+         Optional<Map<String, Object>> bestMatch = tryPickFromMainClubAccountHolders(searchResults);
+         if (!bestMatch.isPresent()) bestMatch = tryPickFromAffiliateClubAccountHolders(searchResults);
++        if (!bestMatch.isPresent()) {
++            tryPickFromAffiliateClubAccountHolders(searchResults);
++        }
+         return mapResults(bestMatch, searchResults);
+     }
+ 
+@@ -63,10 +66,10 @@
+         clubOneNumber.ifPresent(co -> queries.add(queryFactory.searchByClubOne(co)));
+ 
+         return executeAndLogTime("Total time", () ->
+-            queries.parallelStream()
+-                    .map(q -> executeAndLogTime(q.getQueryName(), q::run))
+-                    .flatMap(Collection::stream)
+-                    .map(ClientMatcher::selectRequiredFields)
++                        queries.parallelStream()
++                                .map(q -> executeAndLogTime(q.getQueryName(), q::run))
++                                .flatMap(Collection::stream)
++                                .map(ClientMatcher::selectRequiredFields)
+                     .collect(toList())
+                     .stream()
+                     .filter(distinctByKey(item -> item.get(CLIENT_ID.name())))

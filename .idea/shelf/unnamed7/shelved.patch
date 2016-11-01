@@ -1,0 +1,151 @@
+Index: src/main/java/com/tallink/clientmatching/service/ClientName.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/tallink/clientmatching/service/ClientName.java	(revision 91+:096c97462730+)
++++ src/main/java/com/tallink/clientmatching/service/ClientName.java	(revision 91+:096c97462730+)
+@@ -0,0 +1,37 @@
++package com.tallink.clientmatching.service;
++
++import lombok.AllArgsConstructor;
++import lombok.Getter;
++import lombok.Setter;
++
++@AllArgsConstructor
++@Getter
++@Setter
++public class ClientName {
++    private String firstName;
++    private String lastName;
++
++    @Override
++    public boolean equals(Object obj) {
++        if (this == obj)
++            return true;
++        if (obj == null)
++            return false;
++        if (getClass() != obj.getClass())
++            return false;
++        ClientName other = (ClientName) obj;
++        return (this.firstName != null && other.firstName != null && this.firstName.equals(other.firstName))
++                && (this.lastName != null && other.lastName != null && this.lastName.equals(other.lastName));
++    }
++
++    @Override
++    public int hashCode() {
++        final int prime = 31;
++        int result = 1;
++        if (this.firstName != null)
++            result = prime * result + this.firstName.hashCode();
++        if (this.lastName != null)
++            result = prime * result + this.lastName.hashCode();
++        return result;
++    }
++}
+Index: src/main/java/com/tallink/clientmatching/service/ClientMatcher.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/tallink/clientmatching/service/ClientMatcher.java	(revision 91:096c974627301407dbe8303b64aff8e36ea2a3d6)
++++ src/main/java/com/tallink/clientmatching/service/ClientMatcher.java	(revision 91+:096c97462730+)
+@@ -42,7 +42,7 @@
+                             Optional.ofNullable(clubOneNumber),
+                             firstName,
+                             lastName);
+-            Set<String[]> names = getNames(searchResults);
++            Collection<ClientName> names = getNames(searchResults);
+             List<Map<String, Object>> bestMatch = pickBestMatch(searchResults);
+             if (!bestMatch.isEmpty()) return mapResults(bestMatch, searchResults);
+ 
+@@ -57,16 +57,13 @@
+         });
+     }
+ 
+-    private Set<String[]> getNames(List<Map<String, Object>> searchResults) {
+-        Collection<String[]> result = searchResults.stream().map( r -> new String[] {
+-            r.get(FIRST_NAME.name()) != null ? r.get(FIRST_NAME.name()).toString() : null,
+-                r.get(LAST_NAME.name()) != null ? r.get(LAST_NAME.name()).toString() : null})
+-                .collect(Collectors.toMap(
+-                        r -> r[0]+r[1],
+-                        r -> r,
+-                        (first, second) -> first)).values();
+-
+-        return new HashSet<>(result);
++    private Collection<ClientName> getNames(List<Map<String, Object>> searchResults) {
++        return searchResults
++                .stream()
++                .map(r -> new ClientName(r.get(FIRST_NAME.name()) != null ? r.get(FIRST_NAME.name()).toString() : null
++                        ,r.get(LAST_NAME.name()) != null ? r.get(LAST_NAME.name()).toString() : null))
++                .distinct()
++                .collect(toList());
+     }
+ 
+     private List<Map<String, Object>> pickBestMatch(List<Map<String, Object>> searchResults) {
+@@ -90,24 +87,42 @@
+                 .collect(toList());
+     }
+ 
+-    private List<Map<String, Object>> searchByEmails(List<Map<String, Object>> searchResults, Set<String[]> neededClients) {
+-        Collection<String> emailsFiltered = searchResults
++    private List<Map<String, Object>> searchByEmails(List<Map<String, Object>> searchResults, Collection<ClientName> neededClients) {
++
++        Collection<String> emailsFiltered = getEmails(searchResults);
++
++        if (emailsFiltered.isEmpty()) return new ArrayList<>();
++
++        List<ClientSearch> queries = neededClients.stream()
++                .map(client -> queryFactory.searchByEmails(emailsFiltered, client.getFirstName(), client.getFirstName()))
++                .collect(Collectors.toList());
++
++        return parallelSearch(queries);
++    }
++
++    private Collection<String> getEmails(List<Map<String, Object>> searchResults) {
++        return searchResults
+                 .stream()
+                 .filter(r -> r.containsKey(EMAIL.name()) == true)
+                 .map(r -> r.get(EMAIL.name()).toString())
+                 .distinct()
+                 .collect(toList());
+-        if (emailsFiltered.isEmpty()) return new ArrayList<>();
++    }
+ 
++    private List<Map<String, Object>> searchByPhoneNumbers(List<Map<String, Object>> searchResults, Collection<ClientName> neededClients) {
++
++        Collection<String> phoneNumbers = getPhoneNumbers(searchResults);
++
++        if (phoneNumbers.isEmpty()) return new ArrayList<>();
++
+         List<ClientSearch> queries = neededClients.stream()
+-                .map(client -> queryFactory.searchByEmails(emailsFiltered, client[0], client[1]))
++                .map(client -> queryFactory.searchByPhones(phoneNumbers, client.getFirstName(), client.getFirstName()))
+                 .collect(Collectors.toList());
+ 
+         return parallelSearch(queries);
+     }
+ 
+-    private List<Map<String, Object>> searchByPhoneNumbers(List<Map<String, Object>> searchResults, Set<String[]> neededClients) {
+-
++    private Collection<String> getPhoneNumbers (List<Map<String, Object>> searchResults) {
+         Collection<String> phones = new ArrayList<>();
+         for (Map<String, Object> result : searchResults) {
+             if (!result.containsKey(PHONE_NUMBER.name())) continue;
+@@ -122,14 +137,7 @@
+                 phones.add(phone);
+             }
+         }
+-        Collection<String> phonesFiltered = phones.stream().distinct().collect(Collectors.toList());
+-        if (phonesFiltered.isEmpty()) return new ArrayList<>();
+-
+-        List<ClientSearch> queries = neededClients.stream()
+-                .map(client -> queryFactory.searchByPhones(phonesFiltered, client[0], client[1]))
+-                .collect(Collectors.toList());
+-
+-        return parallelSearch(queries);
++        return phones.stream().distinct().collect(Collectors.toList());
+     }
+ 
+     private List<Map<String, Object>> tryPickFromMainClubAccountHolders(List<Map<String, Object>> searchResults) {
+\ No newline at end of file
